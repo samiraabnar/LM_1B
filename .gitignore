@@ -1,0 +1,11 @@
+data
+data/*
+output/*
+output
+checkpoints
+log_root
+log_root/*
+
+.DS_Store
+.idea
+

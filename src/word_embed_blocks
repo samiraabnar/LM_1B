@@ -1,0 +1,8 @@
+#!/bin/bash
+
+
+echo "start word embedding"
+
+python lm_1b_eval.py --mode dump_emb --pbtxt ../data/graph-2016-09-10.pbtxt --vocab_file ../data/harry_potter_vocab.txt --ckpt '../checkpoints/ckpt-*' --save_dir ../output
+
+echo "Done :)"
