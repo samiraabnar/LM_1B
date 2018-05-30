@@ -1,12 +1,18 @@
 import tensorflow as tf
+from utils import *
 
+CHAR_EMBEDDING_SCOPE= "char_embedding"
+LSTM_SCOPE_PREFIX="lstm/lstm_"
+SOFTMAX_SCOPE= "softmax"
+NUM_SHARDS=8
 
 class CharCNN(object):
     def __init__(self,hparams):
         self.hparams = hparams
 
 
-    def build_model(self):
+    def build_model(self,char_inputs):
+        num_shards = NUM_SHARDS
         char_embeddings_lookup = tf.get_variable("W", shape=(self.hparams.char_vocab_size, self.hparams.char_embedding_size),
                                                  dtype=tf.float32,
                                                  initializer=tf.random_uniform_initializer)
@@ -54,7 +60,7 @@ class CharCNN(object):
                                 ,strides=[1,1,1,1],
                                 padding="VALID") + cnn_bias
             charcnn_out = tf.nn.relu(conv)
-            charcnn_out = tf.reduce_mac(charcnn_out, reduction_indices=[1],
+            charcnn_out = tf.reduce_max(charcnn_out, reduction_indices=[1],
                                         keep_dims=True)
             charcnn_out = tf.reshape(charcnn_out, shape=[-1, filter_feature_size] )
 
@@ -64,9 +70,9 @@ class CharCNN(object):
     def highway_layer(self,input, num_shards= 8, name="dense"):
         with tf.variable_scope(name):
             t_gate = tf.nn.sigmoid(sharded_linear(input,
-                                                      (input.shape[1] / num_shards, input.shape[1]), num_shards=num_shards ) - 2.0 )
+                                                      (int(input.shape[1]) / num_shards, input.shape[1]), num_shards=num_shards ) - 2.0 )
             tr_gate = tf.nn.relu(
-                    sharded_linear(input, (input.shape[1] / num_shards, input.shape[1]), num_shards=num_shards))
+                    sharded_linear(input, ( int(input.shape[1]) / num_shards, input.shape[1]), num_shards=num_shards))
 
             return tf.multiply(t_gate, tr_gate) + tf.multiply((1 - t_gate), input)
 

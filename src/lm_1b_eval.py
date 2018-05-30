@@ -47,6 +47,10 @@ tf.flags.DEFINE_string('pbtxt', '',
 tf.flags.DEFINE_string('ckpt', '',
                        'Checkpoint directory used to fill model values.')
 tf.flags.DEFINE_string('vocab_file', '', 'Vocabulary file.')
+tf.flags.DEFINE_string('save_dir_0', '',
+                       'Used for "dump_emb" mode to save word embeddings.')
+tf.flags.DEFINE_string('save_dir_1', '',
+                       'Used for "dump_emb" mode to save word embeddings.')
 tf.flags.DEFINE_string('save_dir', '',
                        'Used for "dump_emb" mode to save word embeddings.')
 # sample mode flags.
@@ -114,6 +118,8 @@ def _LoadModel(gd_file, ckpt_file):
     sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
     sess.run('save/restore_all', {'save/Const:0': ckpt_file})
     sess.run(t['states_init'])
+
+    print(tf.contrib.graph_editor.get_tensors(tf.get_default_graph()))
 
   return sess, t
 
@@ -259,7 +265,7 @@ def _DumpSentenceEmbedding(sentence, vocab):
   weights = np.ones([BATCH_SIZE, NUM_TIMESTEPS], np.float32)
 
   sess, t = _LoadModel(FLAGS.pbtxt, FLAGS.ckpt)
-
+  print("t:",t)
   if sentence.find('<S>') != 0:
     sentence = '<S> ' + sentence
 
@@ -275,15 +281,20 @@ def _DumpSentenceEmbedding(sentence, vocab):
     print(sentence.split()[i])
     # Add 'lstm/lstm_0/control_dependency' if you want to dump previous layer
     # LSTM.
-    lstm_emb = sess.run(t['lstm/lstm_0/control_dependency'],
+    lstm_emb_0, lstm_emb_1 = sess.run([t['lstm/lstm_0/control_dependency'],t['lstm/lstm_1/control_dependency']],
                         feed_dict={t['char_inputs_in']: char_ids_inputs,
                                    t['inputs_in']: inputs,
                                    t['targets_in']: targets,
                                    t['target_weights_in']: weights})
 
-    fname = os.path.join(FLAGS.save_dir, 'lstm_emb_step_%d.npy' % i)
+    fname = os.path.join(FLAGS.save_dir_0, 'lstm_emb_step_%d.npy' % i)
+    print(fname)
     with tf.gfile.Open(fname, mode='w') as f:
-      np.save(f, lstm_emb)
+      np.save(f, lstm_emb_0)
+    fname = os.path.join(FLAGS.save_dir_1, 'lstm_emb_step_%d.npy' % i)
+    print(fname)
+    with tf.gfile.Open(fname, mode='w') as f:
+      np.save(f, lstm_emb_1)
     sys.stderr.write('LSTM embedding step %d file saved\n' % i)
 
 

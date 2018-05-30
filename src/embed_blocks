@@ -3,13 +3,17 @@
 
 echo "start embedding"
 
-name=../data/subject_1_block_$1_rawtext.txt
+name=../new_input/subject_$2_block_$1_rawtext.txt
 echo "$name"
+
+
 
 var=$(< $name)
 echo "$var"
 
+mkdir ../new_output/subject_$2_block_$1_lstm_0_embeddings
+mkdir ../new_output/subject_$2_block_$1_lstm_1_embeddings
 
- python lm_1b_eval.py --mode dump_lstm_emb --pbtxt ../data/graph-2016-09-10.pbtxt --vocab_file ../data/vocab-2016-09-10.txt --ckpt '../checkpoints/ckpt-*' --save_dir ../output/subject_1_block_$1_lstm_0_embeddings  --sentence "$var"
+python lm_1b_eval.py --mode dump_lstm_emb --pbtxt ../data/graph-2016-09-10.pbtxt --vocab_file ../data/vocab-2016-09-10.txt --ckpt '../checkpoints/ckpt-*' --save_dir_0 ../new_output/subject_$2_block_$1_lstm_0_embeddings --save_dir_1 ../new_output/subject_$2_block_$1_lstm_1_embeddings  --sentence "$var"
 
 echo "Done :)"

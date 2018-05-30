@@ -31,9 +31,9 @@ def get_default_hparams():
 
 hparams= get_default_hparams()
 
-hparams._set_from_map({'sequence_length': 1,
-                       'max_word_length': 50,
-                       'chars_padding_id': 4})
+hparams.sequence_length = 1
+hparams.max_word_length = 50
+hparams.chars_padding_id = 4
 
 def main(unused_argv):
     lm_model = LM_1B(hparams)

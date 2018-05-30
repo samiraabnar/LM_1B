@@ -25,16 +25,16 @@ class LM_1B(object):
     def build_model(self):
         graph_nodes = {}
         # Attach word / character lookup tables
-        self.lookpo_nodes = self.vocab_lookup_graph()
-        self.char_to_id_lookup_table = graph_nodes['lookup_char_to_id']
-        self.word_to_id_lookup_table = graph_nodes['lookup_word_to_id']
+        self.lookup_nodes = self.vocab_lookup_graph()
+        self.char_to_id_lookup_table = self.lookup_nodes['lookup_char_to_id']
+        self.word_to_id_lookup_table = self.lookup_nodes['lookup_word_to_id']
 
         # placeholder for input sentences (encoded as character arrays)
         input_seqs = tf.placeholder(dtype=tf.int64, shape=(self.hparams.sequence_length, self.hparams.max_word_length))
         # attach the model itself
         self.inference_nodes = self.inference(input_seqs)
         # attach a helper to lookup top k predictions
-        self.prediction_nodes = self.prediction(graph_nodes['logits'],graph_nodes['lookup_id_to_word'],k=10)
+        self.prediction_nodes = self.prediction(self.inference_nodes['logits'],self.lookup_nodes['lookup_id_to_word'],k=10)
 
 
     def lstm_cell(self,input):
@@ -138,7 +138,7 @@ class LM_1B(object):
 
     def inference(self,input_seqs):
         charcnn = CharCNN(self.hparams)
-        charcnn.build_model
+        charcnn.build_model(input_seqs)
         with tf.variable_scope(CHAR_EMBEDDING_SCOPE):
             word_embeddings = charcnn.word_embeddings
             word_embeddings = tf.reshape(word_embeddings, (-1, self.hparams.word_embedding_size))
